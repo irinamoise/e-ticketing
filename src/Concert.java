@@ -2,6 +2,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 
+
+/*
 public class Concert extends Event{
     private ArrayList<Artist> artists;
     private String genre;
@@ -52,3 +54,4 @@ public class Concert extends Event{
                 "------------------------------------------";
     }
 }
+*/

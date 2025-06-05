@@ -1,17 +1,16 @@
 import java.util.*;
+import java.sql.SQLException;
 
 public class Service {
-    private ArrayList<Event> events;
-    private ArrayList<Location> locations;
-    private List<Artist> artists;
-    private HashMap<String,User> users = new HashMap<>();
+
+    private DatabaseService databaseService; // Add DatabaseService
 
     public Service() {
 
-        this.locations = DataInitializer.initializeLocations();
-        this.artists = DataInitializer.initializeArtists();
-        this.events = DataInitializer.initializeEvents();
-        this.users = DataInitializer.createUsers();
+        // Initialize DatabaseService
+        DatabaseConnection dbConnection = DatabaseConnection.getInstance();
+        this.databaseService = new DatabaseService(dbConnection.getConnection());
+
     }
 
 
@@ -30,61 +29,115 @@ public class Service {
             System.out.println("7. Cumparare bilet");
             System.out.println("8. Vezi cele mai ieftine evenimente");
             System.out.println("9. Listare useri");
+            System.out.println("10. Sterge-ti contul");
             System.out.println("0. Iesire");
             System.out.print("Introduceti optiunea dvs: ");
 
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
 
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
-
-            switch (choice) {
-                case 1 -> listEvents();
-                case 2 -> listLocations();
-                case 3 -> listArtists();
-                case 4 -> logIn(scanner);
-                case 5 -> createNewUser(scanner);
-                case 6 -> listUserTickets(scanner);
-                case 7 -> purchaseTicket(scanner);
-                case 8 -> sortEventsByPrice();
-                case 9 -> listUsers();
-                case 0 -> {
-                    System.out.println("Se iese din meniu. La revedere!");
-                    running = false;
+                switch (choice) {
+                    case 1 -> listEvents();
+                    case 2 -> listLocations();
+                    case 3 -> listArtists();
+                    case 4 -> logIn(scanner);
+                    case 5 -> createNewUser(scanner);
+                    case 6 -> listUserTickets(scanner);
+                    case 7 -> purchaseTicket(scanner);
+                    case 8 -> sortEventsByPrice();
+                    case 9 -> listUsers();
+                    case 10 -> deleteUserAndTickets(scanner);
+                    case 0 -> {
+                        System.out.println("Se iese din meniu. La revedere!");
+                        running = false;
+                    }
+                    default -> System.out.println("Optiune invalida. Incercati din nou.");
                 }
-                default -> System.out.println("Optiune invalida. Incercati din nou.");
+            }catch (InputMismatchException e) {
+                System.out.println("Optiune invalida. Introduceti un numar.");
+                scanner.nextLine(); // Clear invalid input
             }
         }
         scanner.close();
     }
 
-    private void listEvents() {
-        System.out.println("\n--- Evenimente ---");
-        for (Event e : events) {
-            System.out.println(e.toString());
-            System.out.println();
-            System.out.println();
+    private final CsvLoggerService csvLoggerService = new CsvLoggerService();
+
+    private void listEventWithArtists(Scanner scanner) {
+        System.out.print("Introdu ID-ul evenimentului: ");
+        int eventId = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        try {
+            Event event = databaseService.getEventWithArtists(eventId);
+            if (event != null) {
+                System.out.println("\n--- Eveniment cu artisti ---");
+                System.out.println(event);
+                System.out.println("Artisti asociati:");
+                for (Artist artist : event.getArtists()) {
+                    System.out.println(artist);
+                }
+            } else {
+                System.out.println("Evenimentul nu a fost gasit.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Eroare la accesarea bazei de date: " + e.getMessage());
         }
     }
+
+    private void listEvents() {
+        System.out.println("\n--- Evenimente din baza de date ---");
+        try {
+            List<Event> events = databaseService.listEvents();
+            for (Event event : events) {
+                System.out.println(event);
+            }
+            csvLoggerService.logAction("listEvents");
+        } catch (SQLException e) {
+            System.out.println("Eroare la accesarea bazei de date: " + e.getMessage());
+        }
+    }
+
 
     private void listLocations() {
-        System.out.println("\n--- Locatii ---");
-        for (Location l : locations) {
-            System.out.println(l.toString());
+        System.out.println("\n--- Locatii din baza de date ---");
+        try {
+            List<Location> locations = databaseService.listLocation();
+            for (Location location : locations) {
+                System.out.println(location);
+            }
+            csvLoggerService.logAction("citire locatii");
+        } catch (SQLException e) {
+            System.out.println("Eroare la accesarea bazei de date: " + e.getMessage());
         }
     }
 
-    private void listArtists(){
-        System.out.println("\n--- Artisti---");
-        for (Artist a : artists) {
-            System.out.println(a.toString());
+    private void listArtists() {
+        System.out.println("\n--- Artisti din baza de date ---");
+        try {
+            List<Artist> artists = databaseService.listArtists();
+            for (Artist artist : artists) {
+                System.out.println(artist);
+
+            }
+            csvLoggerService.logAction("citire artisti");
+        } catch (SQLException e) {
+            System.out.println("Eroare la accesarea bazei de date: " + e.getMessage());
         }
     }
 
 
-    private void listUsers(){
-        System.out.println("\n--- Useri---");
-        for (User u : users.values()) {
-            System.out.println(u.toString());
+    private void listUsers() {
+        System.out.println("\n--- Useri din baza de date ---");
+        try {
+            List<User> users = databaseService.listUsers();
+            for (User user : users) {
+                System.out.println(user);
+            }
+            csvLoggerService.logAction("citire useri");
+        } catch (SQLException e) {
+            System.out.println("Eroare la accesarea bazei de date: " + e.getMessage());
         }
     }
 
@@ -93,21 +146,28 @@ public class Service {
         System.out.print("Introduceti username: ");
         String username = scanner.nextLine();
 
-        User user = users.get(username); //
-        if (user != null) {
-            System.out.print("Introduceti parola: ");
-            String password = scanner.nextLine();
-            if (user.getPassword().equals(password)) {
-                System.out.println("Login realizat cu succes! Bine ai venit, " + user.getFirstName() + "!");
-                return;
-            } else{
-                System.out.println(" Parola invalida!");
+        try {
+            List<User> users = databaseService.listUsers();
+            User user = users.stream()
+                    .filter(u -> u.getUsername().equals(username))
+                    .findFirst()
+                    .orElse(null);
+
+            if (user != null) {
+                System.out.print("Introduceti parola: ");
+                String password = scanner.nextLine();
+                if (user.getPassword().equals(password)) {
+                    System.out.println("Login realizat cu succes! Bine ai venit, " + user.getFirstName() + "!");
+                    csvLoggerService.logAction("citire useri");
+                } else {
+                    System.out.println("Parola invalida!");
+                }
+            } else {
+                System.out.println("User negasit.");
             }
-        } else {
-            System.out.println("User negasit.");
+        } catch (SQLException e) {
+            System.out.println("Eroare la accesarea bazei de date: " + e.getMessage());
         }
-
-
     }
 
     private void createNewUser(Scanner scanner) {
@@ -122,32 +182,48 @@ public class Service {
         System.out.print("Introdu parola: ");
         String password = scanner.nextLine();
 
-        User newUser = new User(email, firstName,  lastName, password, username);
-        users.put(newUser.getUsername(), newUser);
-        System.out.println("Cont creat cu succes!");
+        try {
+
+            databaseService.insertUser(username, firstName, lastName, email, password);
+            System.out.println("Cont creat cu succes!");
+            csvLoggerService.logAction("inserare user");
+        } catch (SQLException e) {
+            System.out.println("Eroare la inserarea utilizatorului in baza de date: " + e.getMessage());
+        }
     }
 
     private void listUserTickets(Scanner scanner) {
         System.out.print("Introdu username: ");
         String username = scanner.nextLine();
-        User user = users.get(username);
 
-        if (user != null) {
-            System.out.println("\n--- Biletele tale  ---");
-            for (Ticket ticket : user.getTickets()) {
-                System.out.println(ticket);
+        try {
+            List<Ticket> tickets = databaseService.listTicketsByUsername(username);
+            if (tickets.isEmpty()) {
+                System.out.println("Utilizatorul nu are bilete.");
+            } else {
+                System.out.println("\n--- Biletele utilizatorului ---");
+                for (Ticket ticket : tickets) {
+                    System.out.println(ticket);
+                    csvLoggerService.logAction("citire bilete");
+                }
             }
-
-        }else {
-            System.out.println("Utilizatorul nu a fost gasit.");
+        } catch (SQLException e) {
+            System.out.println("Eroare la accesarea bazei de date: " + e.getMessage());
         }
     }
 
     private void sortEventsByPrice() {
-        Collections.sort(events);
         System.out.println("\n--- Evenimente la super preturi ---");
-        for (Event e : events) {
-            System.out.println(e.toString());
+        try {
+            List<Event> events = databaseService.listEvents();
+            events.sort(Comparator.comparingInt(Event::getBasicPrice)); // Sort by basic price
+            for (Event event : events) {
+                System.out.println(event);
+
+            }
+            csvLoggerService.logAction("citire Events");
+        } catch (SQLException e) {
+            System.out.println("Eroare la accesarea bazei de date: " + e.getMessage());
         }
     }
 
@@ -155,43 +231,70 @@ public class Service {
         System.out.print("Introdu username: ");
         String username = scanner.nextLine();
 
-        User user = null;
-        for (User u : users.values()) { // Fixed iteration
-            if (u.getUsername().equals(username)) {
-                user = u;
-                break;
+        try {
+            List<User> users = databaseService.listUsers();
+            User user = users.stream()
+                    .filter(u -> u.getUsername().equals(username))
+                    .findFirst()
+                    .orElse(null);
+
+
+            if (user == null) {
+                System.out.println("Utilizatorul nu a fost gasit.");
+                return;
             }
-        }
 
-        if (user == null) {
-            System.out.println("Utilizatorul nu a fost gasit.");
-            return;
-        }
+            csvLoggerService.logAction("citire user");
 
-        System.out.println("\n--- Evenimente ---");
-        for (int i = 0; i < events.size(); i++) {
-            System.out.println((i + 1) + ". " + events.get(i));
-        }
-        System.out.print("Selecteaza numarul unui eveniment: ");
-        int eventIndex = scanner.nextInt() - 1;
-        scanner.nextLine();
 
-        if (eventIndex < 0 || eventIndex >= events.size()) {
-            System.out.println("Selectie invalida.");
-            return;
-        }
+            List<Event> events = databaseService.listEvents();
+            csvLoggerService.logAction("citire Events");
+            System.out.println("\n--- Evenimente ---");
+            for (int i = 0; i < events.size(); i++) {
+                System.out.println((i + 1) + ". " + events.get(i));
+            }
 
-        String userFullName = user.getFirstName() + user.getLastName();
+            System.out.print("Selecteaza numarul unui eveniment: ");
+            int eventIndex = scanner.nextInt() - 1;
+            scanner.nextLine();
 
-        Event selectedEvent = events.get(eventIndex);
-        int presentTickets = selectedEvent.getTicketsNr();
-        if (presentTickets > 0) {
-            Ticket newTicket = new Ticket(userFullName, selectedEvent, "30A");
-            user.getTickets().add(newTicket);
-            selectedEvent.setTicketsNr(presentTickets - 1);
-            System.out.println("Bilet achizitionat cu succes pentru evenimentul: " + selectedEvent.getName());
-        } else {
-            System.out.println("Nu mai exista bilete disponibile pentru acest eveniment");
+            if (eventIndex < 0 || eventIndex >= events.size()) {
+                System.out.println("Selectie invalida.");
+                return;
+            }
+
+            Event selectedEvent = events.get(eventIndex);
+            if (selectedEvent.getTicketsNr() > 0) {
+                System.out.print("Introdu locul (ex: 30A): ");
+                String seat = scanner.nextLine();
+
+                databaseService.insertTicket(user.getId(), selectedEvent.getEventId(), seat);
+                selectedEvent.setTicketsNr(selectedEvent.getTicketsNr() - 1);
+                System.out.println("Bilet achizitionat cu succes pentru evenimentul: " + selectedEvent.getName());
+                csvLoggerService.logAction("inserare ticket");
+            } else {
+                System.out.println("Nu mai exista bilete disponibile pentru acest eveniment.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Eroare la accesarea bazei de date: " + e.getMessage());
         }
     }
+
+    private void deleteUserAndTickets(Scanner scanner) {
+        System.out.print("Introdu username-ul utilizatorului de sters: ");
+        String username = scanner.nextLine();
+
+        try {
+            boolean success = databaseService.deleteUserAndTickets(username);
+            if (success) {
+                System.out.println("Utilizatorul si biletele sale au fost sterse cu succes!");
+                csvLoggerService.logAction("delete user and tickets");
+            } else {
+                System.out.println("Utilizatorul nu a fost gasit sau stergerea a esuat.");
+            }
+        } catch (Exception e) {
+            System.out.println("Eroare la stergerea utilizatorului si a biletelor din baza de date: " + e.getMessage());
+        }
+    }
+
 }

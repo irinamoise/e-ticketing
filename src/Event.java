@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public abstract class Event implements Comparable<Event>{
+public class Event implements Comparable<Event>{
 
-    protected static int eventId=0;
+    protected int eventId;
     protected String name;
     protected Location location;
     protected Integer ticketsNr; //setez atributul ca Integer ca sa fie nullable
@@ -15,14 +15,16 @@ public abstract class Event implements Comparable<Event>{
     protected LocalTime startTime;
     protected ArrayList<String> tags;
     protected Integer basicPrice;
+    private List<Artist> artists;
 
     public Event() {
 
+        this.artists = new ArrayList<>(); // Initialize the list
     }
 
 
-    public Event(String name, Location location, String description, Integer ticketsNr, Integer basicPrice) {
-        eventId ++;
+    public Event(int id, String name, Location location, String description, Integer ticketsNr, Integer basicPrice) {
+        this.eventId = id;
         this.name = name;
         this.location = location;
         this.description = description;
@@ -31,7 +33,7 @@ public abstract class Event implements Comparable<Event>{
         this.startTime = LocalTime.of(19, 30);
         this.tags = new ArrayList<>(List.of("super", "cool"));
         this.basicPrice = basicPrice;
-
+        this.artists = new ArrayList<>(); // Initialize the list
     }
 
     public int getEventId() {
@@ -70,7 +72,9 @@ public abstract class Event implements Comparable<Event>{
         return basicPrice;
     }
 
-
+    public List<Artist> getArtists() {
+        return artists;
+    }
 
     public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
@@ -86,6 +90,34 @@ public abstract class Event implements Comparable<Event>{
 
     public void setTicketsNr(int ticketsNr){
         this.ticketsNr = ticketsNr;
+    }
+
+    public void setArtists(List<Artist> artists) {
+        this.artists = artists;
+    }
+
+    public ArrayList<String> getArtistsName(){
+        ArrayList<String>artistsNames = new ArrayList<>();
+
+        for (Artist a : this.artists)
+        {
+            artistsNames.add(a.getName());
+        }
+        return artistsNames;
+    }
+
+    @Override
+    public String toString() {
+        return
+                "nume: " + name + '\n' +
+
+                        "artisti: " + this.getArtistsName() + '\n' + "pret de inceput: " + this.getBasicPrice() + '\n' +
+
+                        "descriere: " + description + '\n' +
+                        "numar bilete: " + ticketsNr + '\n' +
+                        "data: " + startDate +
+                        ", ora: " + startTime +'\n' +
+                        "------------------------------------------";
     }
 
     @Override

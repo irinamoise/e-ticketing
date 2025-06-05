@@ -7,6 +7,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+/*
+
 public class DataInitializer {
 
     public static ArrayList<Artist> initializeArtists() {
@@ -130,3 +132,4 @@ public class DataInitializer {
 
 
 }
+*/

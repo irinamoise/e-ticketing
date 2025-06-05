@@ -2,6 +2,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 
+/*
 public class StagePlay extends Event{
 
     //de implementat String salaSpectacol
@@ -56,3 +57,4 @@ public class StagePlay extends Event{
     }
 
 }
+*/

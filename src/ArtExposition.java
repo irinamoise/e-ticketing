@@ -3,6 +3,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+
+/*
 public class ArtExposition extends Event{
     private String theme;
     private ArrayList<Artist> artists;
@@ -90,3 +92,4 @@ public class ArtExposition extends Event{
     }
 }
 
+*/

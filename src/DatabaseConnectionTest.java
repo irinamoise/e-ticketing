@@ -5,7 +5,7 @@ import java.sql.SQLException;
 public class DatabaseConnectionTest {
     public static void main(String[] args) {
         // Configurați URL-ul bazei de date, utilizatorul și parola
-        String url = "jdbc:mysql://localhost:3306/ticketing_platform";
+        String url = "jdbc:mysql://localhost:3306/ticketing_platform ";
         String user = "root";
         String password = "root";
 

@@ -1,22 +1,35 @@
 
 
 public class Ticket {
-    protected static int ticketId = 0;
+    protected  int ticketId;
     protected Event eventDetails;
     protected String costumerName;
     protected String seat;
     protected int price;
 
-    public Ticket(String costumerName, Event eventDetails, String seat) {
-        ticketId++;
+    public Ticket() {
+
+    }
+
+    public Ticket(String costumerName, int ticketIdid, Event eventDetails, String seat) {
+
         this.costumerName = costumerName;
         this.eventDetails = eventDetails;
         this.price = eventDetails.getBasicPrice();
         this.seat = seat;
+        this.ticketId = ticketIdid;
 
     }
 
-    public static int getTicketId() {
+    public Ticket(Ticket original) {
+        this.costumerName = original.costumerName;
+        this.eventDetails = original.eventDetails; // Assuming Event is immutable or a shallow copy is acceptable
+        this.seat = original.seat;
+        this.price = original.price;
+        this.ticketId = original.ticketId;
+    }
+
+    public int getTicketId() {
         return ticketId;
     }
 
@@ -35,6 +48,8 @@ public class Ticket {
     public int getPrice() {
         return price;
     }
+
+
 
     @Override
     public String toString() {

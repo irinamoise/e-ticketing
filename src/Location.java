@@ -21,6 +21,12 @@ public class Location {
         this.description = description;
     }
 
+    public Location(String name, String address) {
+        this.name = name;
+
+        this.address = address;
+    }
+
     public String getName() {
         return name;
     }
