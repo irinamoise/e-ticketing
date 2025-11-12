@@ -32,7 +32,5 @@ It demonstrates **strong Object-Oriented Programming (OOP)** principles and a mo
 - **Single Responsibility Principle (SRP):** each class handles one concern  
 - **Open/Closed Principle (OCP):** easily extend features without modifying core code  
 
----
 
-## 🗂️ Project Structure
 
